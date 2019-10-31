@@ -1,0 +1,81 @@
+---
+title: "Class Schedule Scraping"
+author: Veethacheng Thao
+output: html_notebook
+---
+
+Start by loading in the packages I will need to load in the html.
+```{r}
+install.packages("tidyr")
+install.packages("rvest")
+library("tidyr")
+library("rvest")
+```
+
+Load in the html and scrape the needed data into a table.
+```{r}
+schedule_html <- read_html("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
+
+class_list <- schedule_html %>% html_nodes(".classrow")
+
+subjects <- class_list %>%
+  html_nodes("td.subj") %>%
+  html_text()
+class_numbers <- class_list %>%
+  html_nodes("td.cat_num") %>%
+  html_text()
+sections <- class_list %>%
+  html_nodes("td.sect") %>%
+  html_text()
+class_names <- class_list %>%
+  html_nodes("td.title") %>%
+  html_text()
+instructors <- class_list %>%
+  html_nodes("td.Instructor") %>%
+  html_text()
+enrollments <- class_list %>%
+  html_nodes("td.enrtot") %>%
+  html_text()
+
+schedule <- tibble(subject= subjects, class_number= class_numbers, section= sections, classname= class_names, instructor= instructors, enrollment= enrollments)
+```
+
+Make a function that will take in a class schedule url.
+```{r}
+read_class_schedule <- function(url){
+  schedule_html <- read_html(url)
+
+  class_list <- schedule_html %>% html_nodes(".classrow")
+
+  subjects <- class_list %>%
+    html_nodes("td.subj") %>%
+    html_text()
+  class_numbers <- class_list %>%
+    html_nodes("td.cat_num") %>%
+    html_text()
+  sections <- class_list %>%
+    html_nodes("td.sect") %>%
+    html_text()
+  class_names <- class_list %>%
+    html_nodes("td.title") %>%
+    html_text()
+  instructors <- class_list %>%
+    html_nodes("td.Instructor") %>%
+    html_text()
+  enrollments <- class_list %>%
+    html_nodes("td.enrtot") %>%
+    html_text()
+
+  schedule <- paste("schedule", url)
+  schedule <- tibble(subject= subjects, class_number= class_numbers, section= sections, classname= class_names, instructor= instructors, enrollment= enrollments)
+}
+```
+
+creating table with function and combining them into one table
+```{r}
+t1 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2019/CSCI.shtml")
+t2 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/CSCI.shtml")
+t3 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2020/MATH.shtml")
+t4 <- read_class_schedule("http://ems.csuchico.edu/APSS/schedule/spr2019/MATH.shtml")
+combined <- rbind(t1, t2, t3, t4)
+```
